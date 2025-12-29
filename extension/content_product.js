@@ -76,7 +76,7 @@ function createToast(message, type = "info", onClose) {
     border-radius: 4px;
     z-index: 999999;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-    min-width: 250px;
+    min-width: 200px;
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -105,10 +105,7 @@ function createToast(message, type = "info", onClose) {
 
   const body = document.createElement("div");
   body.innerHTML = message;
-  body.style.cssText = "font-size: 14px; color: #555; line-height: 1.4;";
-
-  // Support for "Go to Store" / "Donate" buttons in the message
-  // Just ensure standard links work.
+  body.style.cssText = "font-size: 16px; color: #333; line-height: 1.4; font-weight: 500;";
 
   toast.appendChild(header);
   toast.appendChild(body);
@@ -118,6 +115,11 @@ function createToast(message, type = "info", onClose) {
   requestAnimationFrame(() => {
     toast.style.transform = "translateY(0)";
   });
+}
+
+// Helper for comma formatting (e.g. 1000 -> 1,000)
+function formatPrice(num) {
+  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
 async function checkPrice() {
@@ -131,7 +133,7 @@ async function checkPrice() {
   console.log(TAG, `Checking ${prodId}, Current Price: ${promoPrice}`);
 
   // Initial Feedback
-  createToast(`🔍 查詢歷史價格中...`, "info");
+  createToast(`查詢中...`, "info");
 
   try {
     const response = await chrome.runtime.sendMessage({
@@ -142,37 +144,25 @@ async function checkPrice() {
     });
 
     if (!response || !response.ok) {
-      createToast("⚠️ 無法連接社群資料庫", "warning");
+      createToast("無法連接資料庫", "warning");
       return;
     }
 
     const { communityLow, effectiveLow } = response;
-
     let msg = "";
-    let type = "info";
 
     if (effectiveLow === null) {
-      msg = `尚無此商品資料。<br><span style="color:#d63384; font-weight:bold;">您是第一位回報者！</span><br>價格 $${promoPrice} 已記錄 (待驗證)。`;
-      type = "warning";
+      msg = `尚無歷史價格`;
     } else {
-      const current = promoPrice;
-      if (current === null) {
-        msg = `歷史最低: <span style="font-weight:bold;">$${effectiveLow}</span><br>(目前無法讀取頁面價格)`;
-      } else if (current <= effectiveLow) {
-        msg = `🔥 <span style="color:#d63384; font-weight:bold;">歷史新低！</span><br>現在 $${current} (原本最低 $${effectiveLow})`;
-        type = "success";
-      } else {
-        const diff = current - effectiveLow;
-        msg = `目前價格: $${current}<br>歷史最低: <span style="font-weight:bold;">$${effectiveLow}</span><br>(貴了 $${diff})`;
-        type = "info";
-      }
+      // Simplest format as requested: "歷史低價: $X,XXX"
+      msg = `歷史低價: $${formatPrice(effectiveLow)}`;
     }
 
-    createToast(msg, type);
+    createToast(msg, "info");
 
   } catch (err) {
     console.error(TAG, err);
-    createToast("❌ 發生錯誤", "warning");
+    createToast("發生錯誤", "warning");
   }
 }
 

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Momo 歷史最低價提示 (社群信任版)",
+  "name": "Momo 歷史最低價提示",
   "version": "0.1.0",
-  "description": "在 Momo 購物網顯示歷史最低價與社群信任價格。",
+  "description": "在 Momo 購物網顯示歷史最低價。",
   "icons": {
     "16": "icon-16.png",
     "48": "icon-48.png",
