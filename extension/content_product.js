@@ -54,6 +54,11 @@ function createToast(message, type = "info", onClose) {
   const existing = document.getElementById("community-price-toast");
   if (existing) existing.remove();
 
+  // Check if user dismissed it this session
+  if (sessionStorage.getItem("momo_price_toast_dismissed") === "true") {
+    return;
+  }
+
   const toast = document.createElement("div");
   toast.id = "community-price-toast";
 
@@ -65,38 +70,56 @@ function createToast(message, type = "info", onClose) {
   };
   const color = colors[type] || colors.info;
 
+  // Responsive positioning: Bottom-Right on Desktop, Top-Center on Mobile
+  const isMobile = window.innerWidth <= 768;
+  const positionStyles = isMobile
+    ? "top: 10px; right: 10px; left: 10px;" // Full width on mobile top
+    : "bottom: 20px; right: 20px; min-width: 250px;"; // Fixed box on desktop bottom-right
+
   toast.style.cssText = `
     position: fixed;
-    bottom: 20px;
-    right: 20px;
+    ${positionStyles}
     background: white;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     border-left: 5px solid ${color};
     padding: 12px 16px;
-    border-radius: 4px;
-    z-index: 999999;
+    border-radius: 8px;
+    z-index: 2147483647; /* Max Z-Index to avoid being covered */
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-    min-width: 200px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    transform: translateY(100px);
-    transition: transform 0.3s ease-out;
+    gap: 6px;
+    transform: ${isMobile ? "translateY(-100px)" : "translateY(100px)"};
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   `;
 
   const header = document.createElement("div");
-  header.style.cssText = "display: flex; justify-content: space-between; align-items: center;";
+  header.style.cssText = "display: flex; justify-content: space-between; align-items: flex-start;";
 
-  const title = document.createElement("strong");
-  title.textContent = "Momo 歷史價格";
+  const title = document.createElement("div");
+  title.innerHTML = "<strong>Momo 歷史價格</strong>";
   title.style.color = "#333";
+  title.style.fontSize = "14px";
 
   const closeBtn = document.createElement("button");
-  closeBtn.textContent = "✕";
-  closeBtn.style.cssText = "background:none; border:none; cursor:pointer; font-size:16px; color:#999;";
-  closeBtn.onclick = () => {
-    toast.style.transform = "translateY(100px)";
+  closeBtn.innerHTML = "&times;";
+  closeBtn.title = "關閉 (本次工作階段不再顯示)";
+  closeBtn.style.cssText = `
+    background: none; 
+    border: none; 
+    cursor: pointer; 
+    font-size: 20px; 
+    color: #999; 
+    line-height: 1; 
+    padding: 0; 
+    margin: -4px -4px 0 0;
+  `;
+  closeBtn.onclick = (e) => {
+    e.stopPropagation();
+    toast.style.transform = isMobile ? "translateY(-100px)" : "translateY(100px)";
     setTimeout(() => toast.remove(), 300);
+    // Remember dismissal
+    sessionStorage.setItem("momo_price_toast_dismissed", "true");
     if (onClose) onClose();
   };
 
@@ -105,7 +128,7 @@ function createToast(message, type = "info", onClose) {
 
   const body = document.createElement("div");
   body.innerHTML = message;
-  body.style.cssText = "font-size: 16px; color: #333; line-height: 1.4; font-weight: 500;";
+  body.style.cssText = "font-size: 15px; color: #333; line-height: 1.4; font-weight: 500;";
 
   toast.appendChild(header);
   toast.appendChild(body);

@@ -9,8 +9,10 @@
     - **✅ 已驗證 (Trusted)**: 該價格由多個不同 IP 在 24 小時內共同回報，可信度高。
     - **⚠️ 成長中 (Unverified)**: 該價格來自單一來源回報 (冷啟動階段)，供參考但需自行判斷。
 - **智能價格抓取**: 優先解析頁面 **JSON-LD (Structured Data)**，確保價格數據精準無誤，不依賴易變的 CSS 選擇器。
-- **美觀 UI**: 採用 Momo 品牌色系的浮動通知 (Floating Toast)，即時顯示比價結果。
-- **隱私優先**: IP 位址經單向雜湊 (Hash) 處理，僅用於計算信任分數，不儲存原始個資。
+- **最佳化 UI**: 根據裝置自動調整浮動通知位置 (Desktop: 右下, Mobile: 上方)，並支援本次瀏覽期間關閉。
+- **隱私與效能優先**: 
+    - IP 位址經單向雜湊 (Hash) 處理，僅用於計算信任分數。
+    - 採用 Cloudflare Edge Caching，極速回應並降低伺服器負載。
 
 ## 📂 專案結構
 
@@ -25,7 +27,6 @@
     - **API**:
         - `POST /ingest`: 接收價格回報 (Payload: `{ items: [{ prodId, price }] }`)。
         - `GET /lowest?prodId=...`: 查詢最低價與信任等級。
-        - `GET /snapshot`: 匯出資料快照。
 
 ## 🛠️ 安裝與部署
 
@@ -52,6 +53,10 @@ npx wrangler deploy
 
 ## 📝 版本紀錄
 
+- **v0.2.0** (2025-12-30) - **Performance Update**:
+    - **Scalability**: 移除 `/snapshot` 全量下載機制，改採 On-demand 查詢與 Edge Cache。
+    - **UI**: 優化手機版顯示位置，新增關閉按鈕。
+    - **Privacy**: 強制移除 Client-side 完整資料庫快取。
 - **v0.1.0** (2025-12-26):
     - 專案初始化。
     - 實作 Trust Score 系統 (Worker)。

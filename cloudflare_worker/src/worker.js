@@ -10,23 +10,11 @@ export default {
 
     if (path === "/health") return withCors(json({ ok: true }));
 
-    // Snapshot: Dump verified prices only (Trust=0) or all?
-    // For growth, dump all. Client can filter logic if needed, or we filter here.
-    // Let's dump all for now.
+    // Snapshot: REMOVED for scalability.
+    // D1 cannot handle full table dumps efficiently with high traffic.
+    // Use /lowest for on-demand lookups.
     if (path === "/snapshot") {
-      const result = await env.DB.prepare(
-        "SELECT prod_id, min_price, trust_level FROM lowest_prices"
-      ).all();
-
-      const prices = {};
-      if (result.results) {
-        for (const r of result.results) {
-          prices[r.prod_id] = { p: r.min_price, t: r.trust_level };
-        }
-      }
-      const response = withCors(json({ ok: true, last: new Date().toISOString(), prices }));
-      response.headers.set("Cache-Control", "public, max-age=3600");
-      return response;
+      return withCors(json({ error: "Snapshot disabled" }, 410));
     }
 
     // Get Lowest Price

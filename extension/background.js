@@ -8,51 +8,8 @@ let flushTimer = null;
 const pendingIngest = [];
 let ingestBase = "";
 
-// Client-side cache
-let communityCache = new Map();
-let isCacheReady = false;
-const SNAPSHOT_KEY = "community_snapshot";
-
-// Initialize cache
-(async function init() {
-  await loadCache();
-  updateSnapshot(); // Refresh in background
-})();
-
-async function loadCache() {
-  try {
-    const data = await chrome.storage.local.get(SNAPSHOT_KEY);
-    if (data && data[SNAPSHOT_KEY]) {
-      const prices = data[SNAPSHOT_KEY].prices;
-      if (prices) {
-        communityCache = new Map(Object.entries(prices));
-        isCacheReady = true;
-        console.log(`[MomoPrice] Loaded ${communityCache.size} items from local cache.`);
-      }
-    }
-  } catch (e) {
-    console.error("Failed to load cache", e);
-  }
-}
-
-async function updateSnapshot() {
-  try {
-    if (!SETTINGS.useCommunity) return;
-    const resp = await fetch(`${SETTINGS.communityBase}/snapshot`);
-    if (!resp.ok) return;
-    const data = await resp.json();
-    if (data && data.prices) {
-      // Save to storage
-      await chrome.storage.local.set({ [SNAPSHOT_KEY]: data });
-      // Update in-memory
-      communityCache = new Map(Object.entries(data.prices));
-      isCacheReady = true;
-      console.log(`[MomoPrice] Updated snapshot with ${communityCache.size} items.`);
-    }
-  } catch (e) {
-    console.error("Snapshot update failed", e);
-  }
-}
+// Client-side cache removed for scalability.
+// We now rely on the browser's native HTTP cache and the Cloudflare CDN.
 
 function normalizePrice(value) {
   if (value === null || value === undefined) return null;
@@ -71,13 +28,7 @@ async function fetchPrice(prodId) {
 }
 
 async function fetchCommunityLow(prodId, baseUrl) {
-  // 1. Try Local Cache First (0ms latency, 0 cost)
-  if (isCacheReady) {
-    const price = communityCache.get(prodId);
-    return price != null ? normalizePrice(price) : null;
-  }
-
-  // 2. Fallback to API only if cache is not ready (e.g. first install)
+  // Always fetch from API (cached by Cloudflare)
   try {
     if (!baseUrl) {
       return null;
