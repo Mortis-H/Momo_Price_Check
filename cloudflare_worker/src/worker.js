@@ -75,7 +75,7 @@ export default {
       for (const item of payload.items) {
         const prodId = item.prodId;
         const price = Number(item.price);
-        if (!prodId || price <= 0) continue;
+        if (!prodId || price <= 10) continue;
 
         // 1. Record Report
         await env.DB.prepare(
